@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-50: #EEF2FF;
+  --color-primary-100: #E0E7FF;
+  --color-primary-500: #4F46E5;
+  --color-primary-600: #363BD9;
+  --color-primary-700: #2528A3;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 font-sans antialiased min-h-screen w-full m-0 p-0;
+  }
+}
+
+/* Custom dashed border styling for active selection */
+.dashed-active-border {
+  border: 2px dashed #363BD9;
+}
+
+.dashed-circle-border {
+  border: 2px dashed #818CF8;
+}
+
+/* Custom scrollbar for horizontal categories */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
