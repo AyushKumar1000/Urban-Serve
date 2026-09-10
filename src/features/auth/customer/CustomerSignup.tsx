@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../context/AuthContext';
 import { MobileShell } from '../../../components/layout/MobileShell';
-import { ChevronLeft, User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, LogIn, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight, LogIn, CheckCircle2 } from 'lucide-react';
 
 export const CustomerSignup: React.FC = () => {
   const { register, handleSubmit, formState: { errors }, watch } = useForm();

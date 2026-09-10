@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../context/AuthContext';
 import { MobileShell } from '../../../components/layout/MobileShell';
-import { ChevronLeft, User, Mail, Phone, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, LogIn, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, User, Mail, Lock, Eye, EyeOff, ArrowRight, LogIn, CheckCircle2 } from 'lucide-react';
 
 const TRADE_CATEGORIES = [
   { id: 'Home Cleaning', label: 'Home Cleaning', icon: '🧹' },
@@ -15,7 +15,13 @@ const TRADE_CATEGORIES = [
 ];
 
 export const ServiceTeamSignup: React.FC = () => {
-  const { register, handleSubmit, formState: { errors }, setValue } = useForm({
+  const { register, handleSubmit, setValue } = useForm<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    serviceCategory?: string;
+    password?: string;
+  }>({
     defaultValues: {
       serviceCategory: 'Home Cleaning'
     }

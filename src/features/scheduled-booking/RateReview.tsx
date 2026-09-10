@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { rateBookingApi } from '../../api/bookings';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
 import { Star, ArrowLeft } from 'lucide-react';
 
 export const RateReview: React.FC = () => {

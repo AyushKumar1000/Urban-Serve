@@ -4,7 +4,7 @@ import { getQuickServiceRequestApi, updateQuickServiceStatusApi } from '../../ap
 import { QuickServiceRequest } from '../../types';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
-import { ArrowLeft, MapPin, CheckCircle2, Navigation, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Navigation, Loader2 } from 'lucide-react';
 
 export const QuickServiceTracking: React.FC = () => {
   const { id } = useParams<{ id: string }>();

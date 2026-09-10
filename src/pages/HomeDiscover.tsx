@@ -2,19 +2,17 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MobileShell } from '../components/layout/MobileShell';
-import { Search, MapPin, Bell, SlidersHorizontal, Phone, Navigation, ArrowRight, Compass, Calendar, MessageSquare, User, Flame, Clock, LogOut } from 'lucide-react';
+import { Search, MapPin, Bell, Phone, Navigation, ArrowRight, Compass, Calendar, MessageSquare, User, Flame, Clock, LogOut } from 'lucide-react';
 
 export const HomeDiscover: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'explore' | 'bookings' | 'messages' | 'profile'>('explore');
-  const [selectedCategory, setSelectedCategory] = useState('Cleaning');
   const [searchQuery, setSearchQuery] = useState('');
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Alex';
 
   const handleCategoryClick = (catName: string) => {
-    setSelectedCategory(catName);
     navigate(`/services?category=${encodeURIComponent(catName)}`);
   };
 
