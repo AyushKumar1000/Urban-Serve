@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MobileShell } from '../components/layout/MobileShell';
+import { LocationModal } from '../components/location/LocationModal';
 import { Search, MapPin, Bell, Phone, Navigation, ArrowRight, Compass, Calendar, MessageSquare, User, Flame, Clock, LogOut } from 'lucide-react';
 
 export const HomeDiscover: React.FC = () => {
@@ -9,8 +10,10 @@ export const HomeDiscover: React.FC = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'explore' | 'bookings' | 'messages' | 'profile'>('explore');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Alex';
+  const userAddress = user?.address || 'Downtown District, City Center';
 
   const handleCategoryClick = (catName: string) => {
     navigate(`/services?category=${encodeURIComponent(catName)}`);
@@ -25,6 +28,12 @@ export const HomeDiscover: React.FC = () => {
 
   return (
     <MobileShell>
+      {/* Location Modal */}
+      <LocationModal 
+        isOpen={isLocationModalOpen} 
+        onClose={() => setIsLocationModalOpen(false)} 
+      />
+
       {/* Full-Width Desktop / Web Top Header Navbar */}
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-40 px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-2xs">
         <div className="flex items-center space-x-6">
@@ -37,13 +46,16 @@ export const HomeDiscover: React.FC = () => {
           </div>
 
           {/* Service Location Selector */}
-          <div className="hidden sm:flex items-center space-x-2 bg-slate-50 border border-slate-200 shadow-2xs rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-100 transition-colors">
-            <MapPin className="w-4 h-4 text-indigo-600 shrink-0" />
-            <div className="leading-none text-xs">
-              <span className="text-slate-400 font-normal uppercase text-[9px] block">SERVICE LOCATION</span>
-              <span className="font-bold text-slate-800 flex items-center space-x-1">
-                <span>Downtown District</span>
-                <span className="text-[10px] text-slate-400">▼</span>
+          <div 
+            onClick={() => setIsLocationModalOpen(true)}
+            className="flex items-center space-x-2 bg-indigo-50/70 border border-indigo-100 hover:border-indigo-300 shadow-2xs rounded-full px-3.5 py-1.5 text-xs font-medium text-slate-700 cursor-pointer transition-all"
+          >
+            <MapPin className="w-4 h-4 text-[#363BD9] shrink-0" />
+            <div className="leading-none text-xs max-w-[180px] sm:max-w-[260px] truncate">
+              <span className="text-slate-400 font-normal uppercase text-[9px] block">DELIVER & SERVICE TO</span>
+              <span className="font-bold text-slate-900 flex items-center space-x-1 truncate">
+                <span className="truncate">{userAddress}</span>
+                <span className="text-[10px] text-slate-400 shrink-0">▼</span>
               </span>
             </div>
           </div>
