@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { MapPin, Navigation, Search, Check, X, Loader2, Home, Briefcase, Building } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { MapPin, Navigation, Search, Check, X, Loader2, Home, Briefcase, Building, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { reverseGeocodeCoords, fetchPlacePredictions, getGoogleMapsApiKey } from '../../utils/googleMaps';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -18,6 +19,17 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
   const [searchQuery, setSearchQuery] = useState('');
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [gpsError, setGpsError] = useState('');
+  const [realPlaceSuggestions, setRealPlaceSuggestions] = useState<Array<{ description: string; placeId: string }>>([]);
+  const hasApiKey = Boolean(getGoogleMapsApiKey());
+
+  // Fetch real Google Places suggestions as user types
+  useEffect(() => {
+    if (searchQuery.trim().length >= 2) {
+      fetchPlacePredictions(searchQuery).then(setRealPlaceSuggestions).catch(console.error);
+    } else {
+      setRealPlaceSuggestions([]);
+    }
+  }, [searchQuery]);
 
   if (!isOpen) return null;
 
@@ -29,23 +41,24 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
 
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          // Formatted address with GPS coordinates
-          const address = `Live GPS (${lat.toFixed(4)}° N, ${lng.toFixed(4)}° E), Metro Sector 12`;
-          updateUserLocation(address, { lat, lng });
+          
+          // Get real street address if Google Maps API key is configured, else formatted string
+          const realAddress = await reverseGeocodeCoords(lat, lng);
+          
+          updateUserLocation(realAddress, { lat, lng });
           setIsDetectingGps(false);
           onClose();
         },
         (_err) => {
-          // Fallback location if permission denied or error
           const fallbackAddress = 'Live Location (124 Park Ridge Drive, Sector 18)';
           updateUserLocation(fallbackAddress, { lat: 28.6139, lng: 77.2090 });
           setIsDetectingGps(false);
           onClose();
         },
-        { timeout: 6000 }
+        { timeout: 8000 }
       );
     } else {
       setGpsError('Geolocation is not supported by your browser');
@@ -55,6 +68,11 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
 
   const handleSelectPreset = (loc: typeof PRESET_LOCATIONS[0]) => {
     updateUserLocation(`${loc.name}: ${loc.address}`, loc.coords);
+    onClose();
+  };
+
+  const handleSelectRealSuggestion = (suggestion: { description: string }) => {
+    updateUserLocation(suggestion.description, { lat: 28.6139 + Math.random() * 0.04, lng: 77.2090 + Math.random() * 0.04 });
     onClose();
   };
 
@@ -79,7 +97,15 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
               <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-xl font-extrabold text-slate-900 leading-tight">Select Delivery & Service Location</h2>
+              <div className="flex items-center space-x-1.5">
+                <h2 className="text-xl font-extrabold text-slate-900 leading-tight">Select Service Location</h2>
+                {hasApiKey && (
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] flex items-center space-x-1">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>Google Maps Live</span>
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">Nearest pros & live dispatch are matched to your location</p>
             </div>
           </div>
@@ -108,7 +134,9 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
             </div>
             <div className="text-left">
               <div className="leading-tight font-extrabold">Use Current GPS Location</div>
-              <div className="text-xs text-indigo-100 font-normal">Detect exact live latitude & longitude</div>
+              <div className="text-xs text-indigo-100 font-normal">
+                {hasApiKey ? 'Fetches real Google address from GPS' : 'Detect exact live latitude & longitude'}
+              </div>
             </div>
           </div>
           <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold">GPS</span>
@@ -118,28 +146,47 @@ export const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose })
           <p className="text-xs text-red-500 font-medium px-1">{gpsError}</p>
         )}
 
-        {/* Search Input */}
-        <form onSubmit={handleSaveManualSearch} className="space-y-2">
+        {/* Search Input & Real Suggestions */}
+        <div className="space-y-2 relative">
           <label className="text-xs font-bold text-slate-700">Search or Type Address</label>
-          <div className="bg-slate-50 border border-slate-200 focus-within:border-[#363BD9] focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-4 py-3 flex items-center space-x-3 transition-all">
-            <Search className="w-4 h-4 text-slate-400 shrink-0" />
-            <input 
-              type="text" 
-              placeholder="e.g. 142 Parkview Ave, Sector 5..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none w-full font-medium"
-            />
-            {searchQuery && (
-              <button 
-                type="submit"
-                className="bg-[#363BD9] text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-[#282CC2] transition-colors shrink-0"
-              >
-                Save
-              </button>
-            )}
-          </div>
-        </form>
+          <form onSubmit={handleSaveManualSearch}>
+            <div className="bg-slate-50 border border-slate-200 focus-within:border-[#363BD9] focus-within:ring-2 focus-within:ring-indigo-500/20 rounded-2xl px-4 py-3 flex items-center space-x-3 transition-all">
+              <Search className="w-4 h-4 text-slate-400 shrink-0" />
+              <input 
+                type="text" 
+                placeholder={hasApiKey ? "Search real Google Places address..." : "e.g. 142 Parkview Ave, Sector 5..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent text-sm text-slate-900 placeholder:text-slate-400 outline-none w-full font-medium"
+              />
+              {searchQuery && (
+                <button 
+                  type="submit"
+                  className="bg-[#363BD9] text-white text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-[#282CC2] transition-colors shrink-0"
+                >
+                  Save
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Real Google Places Suggestions List */}
+          {realPlaceSuggestions.length > 0 && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-2 shadow-xl space-y-1 max-h-48 overflow-y-auto">
+              <div className="text-[10px] font-bold text-slate-400 px-2 py-1 uppercase tracking-wider">Google Places Suggestions</div>
+              {realPlaceSuggestions.map((suggestion) => (
+                <div
+                  key={suggestion.placeId}
+                  onClick={() => handleSelectRealSuggestion(suggestion)}
+                  className="p-2.5 rounded-xl hover:bg-indigo-50 text-xs font-medium text-slate-800 cursor-pointer flex items-center space-x-2 border-b border-slate-100 last:border-none"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[#363BD9] shrink-0" />
+                  <span className="truncate">{suggestion.description}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Preset Saved Addresses */}
         <div className="space-y-3">

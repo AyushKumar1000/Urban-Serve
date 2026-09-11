@@ -1,43 +1,59 @@
 import { AuthUser, UserRole } from "../types";
+import { api, setToken } from "../lib/api";
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-const getUsers = (): AuthUser[] => {
-  const usersStr = localStorage.getItem("mock_users");
-  return usersStr ? JSON.parse(usersStr) : [];
-};
-
-const saveUsers = (users: AuthUser[]) => {
-  localStorage.setItem("mock_users", JSON.stringify(users));
-};
-
-export const loginApi = async (email: string, password: string, role: UserRole): Promise<AuthUser> => {
-  await delay(800);
-  const users = getUsers();
-  const user = users.find(u => u.email === email && u.role === role);
-  if (!user || !password) {
-    throw new Error("Invalid credentials or user not found");
-  }
-  return user;
-};
-
-export const signupApi = async (data: Partial<AuthUser> & { password: string }, role: UserRole): Promise<AuthUser> => {
-  await delay(800);
-  const users = getUsers();
-  if (users.find(u => u.email === data.email)) {
-    throw new Error("User already exists with this email");
-  }
-  
-  const newUser: AuthUser = {
-    id: Math.random().toString(36).substring(7),
+/**
+ * Sign up a new user via PostgreSQL backend
+ */
+export const signupApi = async (
+  data: Partial<AuthUser> & { password: string },
+  role: UserRole
+): Promise<{ user: AuthUser; token: string }> => {
+  const response = await api.post<{ user: AuthUser; token: string }>('/auth/signup', {
+    name: data.name,
+    email: data.email,
+    password: data.password,
+    phone: data.phone,
     role,
-    name: data.name || "",
-    email: data.email || "",
-    phone: data.phone || "",
     serviceCategory: data.serviceCategory,
-    approvalStatus: role === "service_team" ? "pending" : undefined,
-  };
-  
-  saveUsers([...users, newUser]);
-  return newUser;
+  });
+
+  // Store the JWT token
+  setToken(response.token);
+  return response;
+};
+
+/**
+ * Log in an existing user via PostgreSQL backend
+ */
+export const loginApi = async (
+  email: string,
+  password: string,
+  role: UserRole
+): Promise<{ user: AuthUser; token: string }> => {
+  const response = await api.post<{ user: AuthUser; token: string }>('/auth/login', {
+    email,
+    password,
+    role,
+  });
+
+  // Store the JWT token
+  setToken(response.token);
+  return response;
+};
+
+/**
+ * Update user's location
+ */
+export const updateLocationApi = async (
+  userId: string,
+  address: string,
+  lat?: number,
+  lng?: number
+): Promise<AuthUser> => {
+  return api.put<AuthUser>('/auth/location', {
+    userId,
+    address,
+    lat,
+    lng,
+  });
 };

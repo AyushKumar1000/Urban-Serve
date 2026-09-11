@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthUser, UserRole } from "../types";
-import { loginApi, signupApi } from "../api/auth";
+import { loginApi, signupApi, updateLocationApi } from "../api/auth";
+import { setToken, clearToken } from "../lib/api";
 
 type AuthContextState = {
   user: AuthUser | null;
@@ -18,41 +19,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Restore user from localStorage on mount
     const storedUser = localStorage.getItem("current_user");
-    if (storedUser) {
+    const storedToken = localStorage.getItem("auth_token");
+    if (storedUser && storedToken) {
       try {
         setUser(JSON.parse(storedUser));
       } catch (e) {
-        // ignore
+        // ignore corrupt data
+        localStorage.removeItem("current_user");
+        localStorage.removeItem("auth_token");
       }
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string, role: UserRole) => {
-    const loggedInUser = await loginApi(email, password, role);
-    setUser(loggedInUser);
-    localStorage.setItem("current_user", JSON.stringify(loggedInUser));
+    const response = await loginApi(email, password, role);
+    setUser(response.user);
+    localStorage.setItem("current_user", JSON.stringify(response.user));
+    // Token is already stored by loginApi via setToken()
   };
 
   const signup = async (data: Partial<AuthUser> & { password: string }, role: UserRole) => {
-    const newUser = await signupApi(data, role);
-    setUser(newUser);
-    localStorage.setItem("current_user", JSON.stringify(newUser));
+    const response = await signupApi(data, role);
+    setUser(response.user);
+    localStorage.setItem("current_user", JSON.stringify(response.user));
+    // Token is already stored by signupApi via setToken()
   };
 
-  const updateUserLocation = (address: string, coords?: { lat: number; lng: number }) => {
-    setUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, address, coordinates: coords || prev.coordinates };
+  const updateUserLocation = async (address: string, coords?: { lat: number; lng: number }) => {
+    if (!user) return;
+
+    try {
+      const updatedUser = await updateLocationApi(user.id, address, coords?.lat, coords?.lng);
+      setUser(updatedUser);
+      localStorage.setItem("current_user", JSON.stringify(updatedUser));
+    } catch (e) {
+      // Fallback: update locally if server fails
+      const updated = { ...user, address, coordinates: coords || user.coordinates };
+      setUser(updated);
       localStorage.setItem("current_user", JSON.stringify(updated));
-      return updated;
-    });
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("current_user");
+    clearToken();
   };
 
   return (

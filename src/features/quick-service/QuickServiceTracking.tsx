@@ -4,11 +4,14 @@ import { getQuickServiceRequestApi, updateQuickServiceStatusApi } from '../../ap
 import { QuickServiceRequest } from '../../types';
 import { MobileShell } from '../../components/layout/MobileShell';
 import { ChevronLeft, Phone, MessageSquare, ShieldCheck, Navigation, Clock, MapPin, Share2, Star, Play, RotateCcw } from 'lucide-react';
+import { loadGoogleMapsScript, getGoogleMapsApiKey } from '../../utils/googleMaps';
 
 export const QuickServiceTracking: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [request, setRequest] = useState<QuickServiceRequest | null>(null);
+  const googleMapRef = React.useRef<HTMLDivElement>(null);
+  const hasApiKey = Boolean(getGoogleMapsApiKey());
   
   // Animation progress along route (0% = at partner start, 100% = arrived at customer location)
   const [progressPercent, setProgressPercent] = useState(25);
@@ -28,6 +31,49 @@ export const QuickServiceTracking: React.FC = () => {
   useEffect(() => {
     fetchRequest();
   }, [id]);
+
+  // Initialize Real Google Maps instance if API key is present
+  useEffect(() => {
+    if (!hasApiKey || !request || !googleMapRef.current) return;
+
+    loadGoogleMapsScript().then((loaded) => {
+      if (loaded && window.google && window.google.maps && googleMapRef.current) {
+        const userPos = request.userTargetCoords || { lat: 28.6139, lng: 77.2090 };
+        const partnerPos = request.partnerStartCoords || { lat: 28.6310, lng: 77.2280 };
+
+        const map = new window.google.maps.Map(googleMapRef.current, {
+          center: userPos,
+          zoom: 14,
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            { featureType: "road", elementType: "geometry", stylers: [{ color: "#38414e" }] },
+            { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#212a37" }] },
+            { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] },
+          ],
+        });
+
+        // Add Customer Marker
+        new window.google.maps.Marker({
+          position: userPos,
+          map,
+          title: "Your Location",
+          icon: "https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+        });
+
+        // Add Service Partner Marker
+        new window.google.maps.Marker({
+          position: partnerPos,
+          map,
+          title: request.professional?.name || "Service Partner",
+          icon: "https://maps.google.com/mapfiles/ms/icons/green-dot.png",
+        });
+      }
+    });
+  }, [hasApiKey, request]);
 
   // Simulate smooth Swiggy/Zomato style partner movement toward user
   useEffect(() => {
@@ -126,8 +172,11 @@ export const QuickServiceTracking: React.FC = () => {
         {/* Interactive Swiggy/Zomato Style Live Map Canvas Card */}
         <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-2xl border border-slate-800 relative min-h-[380px] sm:min-h-[440px] flex flex-col justify-between">
           
-          {/* SVG Map Grid & Moving Partner Route */}
-          <div className="absolute inset-0 bg-[#0F172A] overflow-hidden">
+          {/* Real Google Map Container (if API key present) */}
+          <div ref={googleMapRef} className={`absolute inset-0 z-0 ${hasApiKey ? 'block' : 'hidden'}`} />
+
+          {/* SVG Map Grid & Moving Partner Route (Fallback if no API Key) */}
+          <div className={`absolute inset-0 bg-[#0F172A] overflow-hidden ${hasApiKey ? 'hidden' : 'block'}`}>
             {/* SVG Roads & Markers */}
             <svg className="w-full h-full" viewBox="0 0 400 320" preserveAspectRatio="xMidYMid slice">
               <defs>
