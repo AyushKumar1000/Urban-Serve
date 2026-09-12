@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { AuthUser, UserRole } from "../types";
 import { loginApi, signupApi, updateLocationApi } from "../api/auth";
-import { setToken, clearToken } from "../lib/api";
+import { clearToken } from "../lib/api";
 
 type AuthContextState = {
   user: AuthUser | null;
