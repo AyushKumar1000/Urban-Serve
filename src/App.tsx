@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import { NotificationToast } from './components/ui/NotificationToast';
+
 
 // Auth Features
 import { ChooseLoginType } from './features/auth/ChooseLoginType';
@@ -41,46 +43,50 @@ function App() {
   if (isLoading) return null;
 
   return (
-    <Routes>
-      <Route path="/" element={
-        user ? (
-          user.role === 'customer' ? <Navigate to="/home" /> : 
-          user.approvalStatus === 'pending' ? <Navigate to="/service-pending" /> :
-          <Navigate to="/service-dashboard" />
-        ) : <ChooseLoginType />
-      } />
-      
-      {/* Auth Routes */}
-      <Route path="/auth/customer/login" element={<CustomerLogin />} />
-      <Route path="/auth/customer/signup" element={<CustomerSignup />} />
-      <Route path="/auth/service-team/login" element={<ServiceTeamLogin />} />
-      <Route path="/auth/service-team/signup" element={<ServiceTeamSignup />} />
-      <Route path="/auth/forgot-password" element={<ForgotPasswordStub />} />
+    <>
+      <NotificationToast />
+      <Routes>
+        <Route path="/" element={
+          user ? (
+            user.role === 'customer' ? <Navigate to="/home" /> : 
+            user.approvalStatus === 'pending' ? <Navigate to="/service-pending" /> :
+            <Navigate to="/service-dashboard" />
+          ) : <ChooseLoginType />
+        } />
+        
+        {/* Auth Routes */}
+        <Route path="/auth/customer/login" element={<CustomerLogin />} />
+        <Route path="/auth/customer/signup" element={<CustomerSignup />} />
+        <Route path="/auth/service-team/login" element={<ServiceTeamLogin />} />
+        <Route path="/auth/service-team/signup" element={<ServiceTeamSignup />} />
+        <Route path="/auth/forgot-password" element={<ForgotPasswordStub />} />
 
-      {/* Service Team Protected Routes */}
-      <Route path="/service-pending" element={<ProtectedRoute role="service_team"><PendingApproval /></ProtectedRoute>} />
-      <Route path="/service-dashboard" element={<ProtectedRoute role="service_team"><ServiceTeamDashboardPlaceholder /></ProtectedRoute>} />
+        {/* Service Team Protected Routes */}
+        <Route path="/service-pending" element={<ProtectedRoute role="service_team"><PendingApproval /></ProtectedRoute>} />
+        <Route path="/service-dashboard" element={<ProtectedRoute role="service_team"><ServiceTeamDashboardPlaceholder /></ProtectedRoute>} />
 
-      {/* Customer Protected Routes */}
-      <Route path="/home" element={<ProtectedRoute role="customer"><HomeDiscover /></ProtectedRoute>} />
-      <Route path="/services" element={<ProtectedRoute role="customer"><ServiceList /></ProtectedRoute>} />
-      <Route path="/services/:id" element={<ProtectedRoute role="customer"><ServiceDetail /></ProtectedRoute>} />
-      <Route path="/book/confirm" element={<ProtectedRoute role="customer"><BookingConfirm /></ProtectedRoute>} />
-      <Route path="/book/payment" element={<ProtectedRoute role="customer"><PaymentStub /></ProtectedRoute>} />
-      <Route path="/book/success" element={<ProtectedRoute role="customer"><BookingSuccess /></ProtectedRoute>} />
-      <Route path="/my-bookings" element={<ProtectedRoute role="customer"><MyBookings /></ProtectedRoute>} />
-      <Route path="/my-bookings/:id" element={<ProtectedRoute role="customer"><BookingDetail /></ProtectedRoute>} />
-      <Route path="/book/rate/:id" element={<ProtectedRoute role="customer"><RateReview /></ProtectedRoute>} />
+        {/* Customer Protected Routes */}
+        <Route path="/home" element={<ProtectedRoute role="customer"><HomeDiscover /></ProtectedRoute>} />
+        <Route path="/services" element={<ProtectedRoute role="customer"><ServiceList /></ProtectedRoute>} />
+        <Route path="/services/:id" element={<ProtectedRoute role="customer"><ServiceDetail /></ProtectedRoute>} />
+        <Route path="/book/confirm" element={<ProtectedRoute role="customer"><BookingConfirm /></ProtectedRoute>} />
+        <Route path="/book/payment" element={<ProtectedRoute role="customer"><PaymentStub /></ProtectedRoute>} />
+        <Route path="/book/success" element={<ProtectedRoute role="customer"><BookingSuccess /></ProtectedRoute>} />
+        <Route path="/my-bookings" element={<ProtectedRoute role="customer"><MyBookings /></ProtectedRoute>} />
+        <Route path="/my-bookings/:id" element={<ProtectedRoute role="customer"><BookingDetail /></ProtectedRoute>} />
+        <Route path="/book/rate/:id" element={<ProtectedRoute role="customer"><RateReview /></ProtectedRoute>} />
 
-      {/* Quick Service Routes (Customer) */}
-      <Route path="/quick-service" element={<ProtectedRoute role="customer"><QuickServiceEntry /></ProtectedRoute>} />
-      <Route path="/quick-service/match/:id" element={<ProtectedRoute role="customer"><QuickServiceMatching /></ProtectedRoute>} />
-      <Route path="/quick-service/track/:id" element={<ProtectedRoute role="customer"><QuickServiceTracking /></ProtectedRoute>} />
-      
-      {/* Catch all */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
+        {/* Quick Service Routes (Customer) */}
+        <Route path="/quick-service" element={<ProtectedRoute role="customer"><QuickServiceEntry /></ProtectedRoute>} />
+        <Route path="/quick-service/match/:id" element={<ProtectedRoute role="customer"><QuickServiceMatching /></ProtectedRoute>} />
+        <Route path="/quick-service/track/:id" element={<ProtectedRoute role="customer"><QuickServiceTracking /></ProtectedRoute>} />
+        
+        {/* Catch all */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </>
   );
+
 }
 
 export default App;

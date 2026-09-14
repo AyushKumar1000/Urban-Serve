@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { MobileShell } from '../components/layout/MobileShell';
 import { LocationModal } from '../components/location/LocationModal';
-import { Search, MapPin, Bell, Phone, Navigation, ArrowRight, Compass, Calendar, MessageSquare, User, Flame, Clock, LogOut } from 'lucide-react';
+import { NotificationBell } from '../components/ui/NotificationToast';
+import { Search, MapPin, Phone, Navigation, ArrowRight, Compass, Calendar, MessageSquare, User, Flame, Clock, LogOut, Zap } from 'lucide-react';
+
 
 export const HomeDiscover: React.FC = () => {
   const navigate = useNavigate();
@@ -71,12 +73,10 @@ export const HomeDiscover: React.FC = () => {
             <span>My Bookings</span>
           </button>
 
-          <button className="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-slate-50 shadow-2xs relative">
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#363BD9] ring-2 ring-white"></span>
-          </button>
+          <NotificationBell />
 
           <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
+
             <div className="w-9 h-9 rounded-full bg-[#363BD9] text-white font-bold text-xs flex items-center justify-center shadow-2xs">
               {userName.charAt(0)}
             </div>
@@ -137,6 +137,43 @@ export const HomeDiscover: React.FC = () => {
           </div>
         </div>
 
+        {/* Emergency Quick Service Matching Radar Card */}
+        <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-rose-600 text-white rounded-3xl p-6 sm:p-7 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden">
+          <div className="space-y-2 z-10 max-w-xl">
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-xs font-extrabold uppercase tracking-wider">
+              <Zap className="w-3.5 h-3.5 fill-current animate-bounce" />
+              <span>EMERGENCY 15-MIN DISPATCH</span>
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Instant Pro Matching
+            </h3>
+            <p className="text-orange-100 text-xs sm:text-sm">
+              Pipe burst, AC breakdown, or power cut? Radar scans all verified partners within 3 km for immediate dispatch.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-2">
+              {['Plumbing Leak', 'Main Breaker Trip', 'AC Emergency', 'Lockout'].map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => navigate('/quick-service')}
+                  className="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-semibold text-xs border border-white/20 transition-all active:scale-95"
+                >
+                  ⚡ {preset}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="shrink-0 z-10 w-full md:w-auto">
+            <button
+              onClick={() => navigate('/quick-service')}
+              className="w-full md:w-auto px-6 py-4 rounded-2xl bg-white text-orange-700 hover:bg-orange-50 font-extrabold text-sm shadow-xl flex items-center justify-center space-x-2 transition-transform hover:scale-105 active:scale-95"
+            >
+              <span>Match Pro Nearby</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         {/* Live Job Tracking Card */}
         <div 
           onClick={() => navigate('/quick-service/track/active')}
@@ -162,6 +199,7 @@ export const HomeDiscover: React.FC = () => {
                 <div className="bg-indigo-500 h-full w-2/3 rounded-full"></div>
               </div>
             </div>
+
 
             {/* Provider Section */}
             <div className="flex items-center justify-between md:justify-end space-x-4 pt-2 md:pt-0">

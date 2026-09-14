@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getQuickServiceRequestApi, simulateMatchingApi } from '../../api/quickservice';
 import { QuickServiceRequest } from '../../types';
+import { useNotification } from '../../context/NotificationContext';
 import { MobileShell } from '../../components/layout/MobileShell';
 import { Zap, AlertCircle, CheckCircle2, MapPin, Navigation, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export const QuickServiceMatching: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { addQuickRequestNotification, requestNotificationPermission } = useNotification();
   const [request, setRequest] = useState<QuickServiceRequest | null>(null);
   const [error, setError] = useState('');
   const [scanningPros] = useState([
@@ -18,16 +20,26 @@ export const QuickServiceMatching: React.FC = () => {
 
   useEffect(() => {
     if (!id) return;
+    requestNotificationPermission();
     
     getQuickServiceRequestApi(id).then(req => {
       setRequest(req);
       if (req.status === 'searching') {
         simulateMatchingApi(id)
-          .then(setRequest)
+          .then((matched) => {
+            setRequest(matched);
+            addQuickRequestNotification({
+              requestId: matched.id,
+              serviceType: matched.serviceType,
+              etaMinutes: matched.etaMinutes || 12,
+              professionalName: matched.professional?.name,
+            });
+          })
           .catch(e => setError(e.message));
       }
     }).catch(e => setError(e.message));
   }, [id]);
+
 
   if (error) {
     return (

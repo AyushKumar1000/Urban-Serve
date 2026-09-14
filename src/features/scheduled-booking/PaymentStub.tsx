@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotification } from '../../context/NotificationContext';
 import { createBookingApi } from '../../api/bookings';
 import { getServiceByIdApi } from '../../api/services';
 import { Card } from '../../components/ui/Card';
@@ -12,6 +13,7 @@ export const PaymentStub: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addBookingNotification, requestNotificationPermission } = useNotification();
   const state = location.state as { serviceId?: string; slot?: string; price?: number } | null;
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,6 +27,7 @@ export const PaymentStub: React.FC = () => {
     e.preventDefault();
     setIsProcessing(true);
     try {
+      requestNotificationPermission();
       const service = await getServiceByIdApi(state.serviceId!);
       const booking = await createBookingApi({
         serviceId: service.id,
@@ -33,12 +36,23 @@ export const PaymentStub: React.FC = () => {
         scheduledTime: state.slot!,
         price: state.price!,
       });
+
+      // Trigger interactive booking notification
+      addBookingNotification({
+        bookingId: booking.id,
+        serviceTitle: service.title,
+        scheduledTime: state.slot!,
+        price: state.price!,
+        professionalName: service.professional.name,
+      });
+
       navigate('/book/success', { state: { bookingId: booking.id } });
     } catch (err: any) {
       setError(err.message || "Payment failed");
       setIsProcessing(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
